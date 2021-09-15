@@ -1,7 +1,9 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { AxiosResponse } from 'axios';
-import { Observable, lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
+import { CreateUserDto } from 'src/user/dto/createUser.dto';
+import { UserService } from 'src/user/user.service';
+import { SignInDto } from './dto/signin.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,13 +19,33 @@ export class AuthService {
   //   return this.holidayRepository.createHoliday(createHolidayDto);
   // }
 
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private httpService: HttpService,
+    private readonly userService: UserService,
+  ) {}
 
-  getUsers(): Promise<any> {
+  getRepos(user: string): Promise<any> {
     return lastValueFrom(
-      this.httpService.get('https://api.github.com/users/lminoru/repos', {
+      this.httpService.get(`https://api.github.com/users/${user}/repos`, {
         headers: { Accept: 'application/vnd.github.v3+json' },
       }),
-    ).then((res) => res.data);
+    )
+      .then((res) => res.data)
+      .catch((err) => Error(err));
+  }
+
+  signin(signInDto: SignInDto): string {
+    const { username, pwd } = signInDto;
+    return `my username is ${username} with pwd ${pwd}`;
+  }
+
+  async register(userData: CreateUserDto): Promise<any> {
+    return this.userService.create(userData).then((user) => {
+      /*const token = this.createToken(user);*/
+      return {
+        /*Token: token,*/
+        User: user,
+      };
+    });
   }
 }
